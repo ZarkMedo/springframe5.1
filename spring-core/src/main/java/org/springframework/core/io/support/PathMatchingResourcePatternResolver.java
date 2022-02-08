@@ -203,6 +203,12 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 
 	private final ResourceLoader resourceLoader;
 
+	// 创建ant匹配类
+	// 在做uri匹配规则发现这个类，根据源码对该类进行分析，它主要用来做类URLs字符串匹配；
+	//   /trip/api/*x    匹配 /trip/api/x，/trip/api/ax，/trip/api/abx ；但不匹配 /trip/abc/x；
+	//   /trip/a/a?x    匹配 /trip/a/abx；但不匹配 /trip/a/ax，/trip/a/abcx
+	//   /**/api/alie    匹配 /trip/api/alie，/trip/dax/api/alie；但不匹配 /trip/a/api
+	//   /**/*.htmlm   匹配所有以.htmlm结尾的路径
 	private PathMatcher pathMatcher = new AntPathMatcher();
 
 

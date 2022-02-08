@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 public abstract class AbstractRefreshableConfigApplicationContext extends AbstractRefreshableApplicationContext
 		implements BeanNameAware, InitializingBean {
 
+	// 处理后的配置数组
 	@Nullable
 	private String[] configLocations;
 
@@ -78,6 +79,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 			Assert.noNullElements(locations, "Config locations must not be null");
 			this.configLocations = new String[locations.length];
 			for (int i = 0; i < locations.length; i++) {
+				// 此处通过resolvePath()处理名称的作用是因为 配置文件的名称也可以使用${}的方式完成解析
 				this.configLocations[i] = resolvePath(locations[i]).trim();
 			}
 		}

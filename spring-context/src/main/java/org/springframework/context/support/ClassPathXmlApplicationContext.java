@@ -138,9 +138,12 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 			String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
 			throws BeansException {
 
+		// 进入父类方法调用构造方法, 在父类中创建成员变量，供后期使用
+		// 成员变量 eg :  xml资源解析器， refresh、destroy的锁对象、BeanFactoryPostProcessors容器
 		super(parent);
 		setConfigLocations(configLocations);
 		if (refresh) {
+			// TODO 刷新入口， 容器的初始化入口
 			refresh();
 		}
 	}

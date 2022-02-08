@@ -45,6 +45,7 @@ import org.springframework.lang.Nullable;
  */
 public abstract class AbstractXmlApplicationContext extends AbstractRefreshableConfigApplicationContext {
 
+	// xml解析判断标示位
 	private boolean validating = true;
 
 
@@ -80,16 +81,21 @@ public abstract class AbstractXmlApplicationContext extends AbstractRefreshableC
 	@Override
 	protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) throws BeansException, IOException {
 		// Create a new XmlBeanDefinitionReader for the given BeanFactory.
+		// 创建 XmlBeanDefinitionReader ,将 DefaultListableBeanFactory设置为 XmlBeanDefinitionReader的register属性
 		XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
 
 		// Configure the bean definition reader with this context's
 		// resource loading environment.
+		// 设置环境对象
 		beanDefinitionReader.setEnvironment(this.getEnvironment());
+		// 设置环境加载对象
 		beanDefinitionReader.setResourceLoader(this);
+		// 设置实例解析对象，  也就是解析xml的对象
 		beanDefinitionReader.setEntityResolver(new ResourceEntityResolver(this));
 
 		// Allow a subclass to provide custom initialization of the reader,
 		// then proceed with actually loading the bean definitions.
+		// TODO 当前进度 重点：初始化和通过BeanDefinitionReader 加载BD对象
 		initBeanDefinitionReader(beanDefinitionReader);
 		loadBeanDefinitions(beanDefinitionReader);
 	}

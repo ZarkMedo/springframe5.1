@@ -153,6 +153,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 
 	static {
+		// 优先加载上下文关闭事件，防止在应用关闭的时候发生奇怪的类加载问题 , 可以忽略
 		// Eagerly load the ContextClosedEvent class to avoid weird classloader issues
 		// on application shutdown in WebLogic 8.1. (Reported by Dustin Woods.)
 		ContextClosedEvent.class.getName();
@@ -162,7 +163,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	/** Logger used by this class. Available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	/** Unique id for this context, if any. */
+	/**
+	 * 创建上下文唯一标识
+	 * Unique id for this context, if any. */
 	private String id = ObjectUtils.identityToString(this);
 
 	/** Display name. */
@@ -176,7 +179,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Nullable
 	private ConfigurableEnvironment environment;
 
-	/** BeanFactoryPostProcessors to apply on refresh. */
+	/**
+	 * 创建 BeanFactoryPostProcessors容器
+	 * BeanFactoryPostProcessors to apply on refresh. */
 	private final List<BeanFactoryPostProcessor> beanFactoryPostProcessors = new ArrayList<>();
 
 	/** System time in milliseconds when this context started. */
@@ -188,7 +193,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	/** Flag that indicates whether this context has been closed already. */
 	private final AtomicBoolean closed = new AtomicBoolean();
 
-	/** Synchronization monitor for the "refresh" and "destroy". */
+	/**
+	 * refresh和destroy时的锁对象， refresh和destroy时是一个完整的过程，
+	 * Synchronization monitor for the "refresh" and "destroy". */
 	private final Object startupShutdownMonitor = new Object();
 
 	/** Reference to the JVM shutdown hook, if registered. */
@@ -226,6 +233,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * Create a new AbstractApplicationContext with no parent.
 	 */
 	public AbstractApplicationContext() {
+		// 创建资源模式解析器 (就是解析xml配置文件的类)
 		this.resourcePatternResolver = getResourcePatternResolver();
 	}
 
@@ -326,6 +334,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * a custom {@link ConfigurableEnvironment} implementation.
 	 */
 	protected ConfigurableEnvironment createEnvironment() {
+		// 创建标准的环境, 无参的构造方法调用， 继承了父类 AbstractEnvironment， 如果需要断点查看细节，需要在父类的构造方法中打上断点
 		return new StandardEnvironment();
 	}
 
@@ -474,6 +483,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public void setParent(@Nullable ApplicationContext parent) {
 		this.parent = parent;
+		// 如果有父类对象的话， 合并父类对象的配置环境， 详细请了解springmvc的父子容器，spring中未使用
 		if (parent != null) {
 			Environment parentEnvironment = parent.getEnvironment();
 			if (parentEnvironment instanceof ConfigurableEnvironment) {
@@ -512,13 +522,32 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.applicationListeners;
 	}
 
+	/**
+	 * 1. 准备刷新的动作
+	 * 2. 常见初始化的BeanFactory, 删除已存在的BeanFactory，创新创建新的  DefaultListableBeanFactory 对象
+	 * 3.
+	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
+			/**
+			 * 准备工作
+			 * 1. 设置启动时间
+			 * 2. 修改关闭和启动的标识
+			 * 3. 初始化属性资源 (留空方法进行重写扩展 )
+			 * 4. getEnvironment() 初始化创建环境对象，验证必要属性是否存在，不存在提前报错
+			 * 5. 准备监听器和监听事件的集合
+			 */
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			/**
+			 * 1. refreshBeanFactory 如果存在BeanFactory则清理BeanFactory重新创建BeanFactory 父类构造函数，塞入各种属性值
+			 * 2. 塞入序列化值，保证容器唯一
+			 * 3. customerFactory()调用， 提供重写的方法， 可以修改是否可以重写bean对象，是否支持循环依赖
+			 * 4. loadBD方法， 初始化并加载BD对象
+			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
@@ -547,6 +576,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 开始实例化非懒加载的bean对象
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -597,10 +627,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
+		// 预留方法
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
 		// see ConfigurablePropertyResolver#setRequiredProperties
+		// 获取环境， 并验证必要的属性，  默认validateRequiredProperties为空， 可以在initPropertySources添加
 		getEnvironment().validateRequiredProperties();
 
 		// Store pre-refresh ApplicationListeners...
@@ -609,6 +641,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 		else {
 			// Reset local application listeners to pre-refresh state.
+			// 在springboot中初始化会有多个监听器对象， 会先清除applicationListeners集合，塞入earlyApplicationListeners
 			this.applicationListeners.clear();
 			this.applicationListeners.addAll(this.earlyApplicationListeners);
 		}
@@ -875,6 +908,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		// 正式开始实例化Bean对象
 		beanFactory.preInstantiateSingletons();
 	}
 

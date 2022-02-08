@@ -142,7 +142,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	private String serializationId;
 
-	/** Whether to allow re-registration of a different definition with the same name. */
+	/** Whether to allow re-registration of a different definition with the same name.
+	 *  名称相同的bean是否可以被覆盖
+	 * */
 	private boolean allowBeanDefinitionOverriding = true;
 
 	/** Whether to allow eager class loading even for lazy-init beans. */
@@ -870,6 +872,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Trigger post-initialization callback for all applicable beans...
 		for (String beanName : beanNames) {
+			// getSingleton(beanName) 是在一级缓存中获取对象
 			Object singletonInstance = getSingleton(beanName);
 			if (singletonInstance instanceof SmartInitializingSingleton) {
 				SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
